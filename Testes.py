@@ -1,5 +1,6 @@
 import unittest 
 from Twitter import Tweet, Perfil, PessoaFisica, PessoaJuridica, RepositoriosUsuarios, MyTwitter
+from excecoes import UJCException
 
 class TestTweet(unittest.TestCase):
 
@@ -46,7 +47,7 @@ class TestPerfil(unittest.TestCase):
         self.perfil1.add_tweet(tweet)
         self.assertIn(tweet, self.perfil1._Perfil__tweets)
 
-      def test_get_tweets(self):
+    def test_get_tweets(self):
         # Adicionando tweets ao perfil1
         self.perfil1.add_tweet(self.tweet1)
         self.perfil1.add_tweet(self.tweet2)
@@ -123,7 +124,7 @@ class TestRepositoriosUsuarios(unittest.TestCase):
         self.assertEqual(repo.buscar("usuario1"), novo_perfil)
 
 class TestMyTwitter(unittest.TestCase):
-    
+
     def setUp(self):
         self.my_twitter = MyTwitter()
         self.usuario1 = "@Zacarias"
