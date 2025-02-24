@@ -2,13 +2,13 @@ import datetime
 from funcoes_aux import gerador
 from excecoes import UJCException, UNCException, PPException, PDException, PIException, MFPException, SIException
 
-class Tweet:
 
-    def __init__(self, nome_usuario:str, texto:str, gerador):
+class Tweet:
+    def __init__(self, nome_usuario:str, texto:str):
         self.__usuario = nome_usuario
         self.__mensagem = texto 
-        self.__id = next(gerador)
-        self.__data_postagem = datetime.now()
+        self.__id = next(gerador())
+        self.__data_postagem = datetime.datetime.now()
 
     def get_id(self):
         return self.__id
@@ -40,7 +40,7 @@ class Perfil():
         self.__tweets.append(tweet)
 
     def get_tweets(self):
-        return sorted(self.__tweets, key=lambda t: t.get_postagem(), reverse=True)
+        return sorted(self.__tweets, key=lambda t: t.get_data_postagem(), reverse=True)
 
     def get_tweet(self, tweet_id):
         for tweet in self.__tweets:
@@ -52,7 +52,7 @@ class Perfil():
         timeline = self.__tweets[:]
         for perfil in self.__seguidos:
             timeline.extend(perfil.get_tweets())
-        return sorted(timeline, key=lambda t: t.get_postagem())
+        return sorted(timeline, key=lambda t: t.get_data_postagem())
 
     def set_usuario(self, usuario):
         self.__usuario = usuario
@@ -93,7 +93,7 @@ class RepositoriosUsuarios():
         self.__usuarios = []
     
     def cadastrar(self, perfil: Perfil):
-        if self.buscar(perfil.get_usuario()) is not None:
+        if perfil is not None:
             raise UJCException(perfil.get_usuario())
         self.__usuarios.append(perfil)
     
@@ -115,12 +115,11 @@ class MyTwitter:
     def __init__(self):
         self.__repositorio = RepositoriosUsuarios()
     
-    def criar_perfil(self, usuario):
-        perfil = self.__repositorio.buscar(usuario)
-
-        if perfil is not None:
-            raise PEException(usuario)
-        self.__repositorio.cadastrar(perfil)
+    def criar_perfil(self, perfil: Perfil):
+        if self.__repositorio.buscar(perfil) is not None:
+            raise PPException(perfil.get_usuario())
+        else:
+            self.__repositorio.cadastrar(perfil)
 
     def cancelar_perfil(self, usuario):
         perfil = self.__repositorio.buscar(usuario)
@@ -168,10 +167,14 @@ class MyTwitter:
         perfil_seguido = self.__repositorio.buscar(usuario_seguido)
         perfil_seguidor = self.__repositorio.buscar(usuario_seguidor)
 
-        if perfil_seguido is None or perfil_seguidor is None:
-            raise PIException(usuario)
-        elif perfil_seguido.is_ativo() == False or perfil_seguidor.is_ativo() == False:
-            raise PDException(usuario)
+        if perfil_seguido is None:
+            if perfil_seguidor is None:
+                raise PIException(perfil_seguidor)
+            raise PIException(perfil_seguido)
+        elif perfil_seguido.is_ativo() == False:
+            if perfil_seguidor.is_ativo() == False:
+                raise PDException(perfil_seguidor)
+            raise PDException(perfil_seguido)
         else:
             perfil_seguido.add_seguidor(perfil_seguidor)
             perfil_seguidor.add_seguidos(perfil_seguido)
@@ -191,7 +194,7 @@ class MyTwitter:
                     count += 1
             return count
     
-    def seguidores(self):
+    def seguidores(self,usuario):
         perfil = self.__repositorio.buscar(usuario)
 
         if perfil is None: 
@@ -206,7 +209,7 @@ class MyTwitter:
                     list_seguidores.append(seguidor)
             return list_seguidores
 
-    def seguidos(self):
+    def seguidos(self, usuario):
         perfil = self.__repositorio.buscar(usuario)
         
         if perfil is None: 
@@ -218,6 +221,6 @@ class MyTwitter:
             for seguido in perfil.seguidos():
                 seguido = self.__repositorio.buscar(seguido)
                 if seguido is not None and seguido.is_ativo() == True:
-                    list_seguido.append(seguido)
-            return list_seguido
+                    list_seguidos.append(seguido)
+            return list_seguidos
 

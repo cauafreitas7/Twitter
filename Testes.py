@@ -1,24 +1,23 @@
 import unittest 
-from Twitter import Tweet, Perfil, PessoaFisica, PessoaJuridica, RepositoriosUsuarios, MyTwitter
+from Twitter import Tweet, Perfil, PessoaFisica, PessoaJuridica, RepositoriosUsuarios, MyTwitter, gerador
 from excecoes import UJCException
 
 class TestTweet(unittest.TestCase):
 
-    def Test_get_mensagem(self):
+    def test_get_mensagem(self):
         perfil_teste = Perfil('user123')
         tweet_teste = Tweet(perfil_teste.get_usuario(), "Meu primeiro tweet!")
-        self.assertEqual(perfil_teste.get_mensagem(), "Meu primeiro tweet!")
+        self.assertEqual(tweet_teste.get_mensagem(), "Meu primeiro tweet!")
     
-    def Test_get_id(self):
+    def test_get_id(self):
         perfil_teste = Perfil('user124')
         tweet_teste = Tweet(perfil_teste.get_usuario(), "Meu primeiro tweet!")
-        self.assertEqual(perfil_teste.get_id(), 1)
+        self.assertEqual(tweet_teste.get_id(), 1)
 
-    def Test_get_usuario(self):
+    def test_get_usuario(self):
         perfil_teste = Perfil('user125')
         tweet_teste = Tweet(perfil_teste.get_usuario(), "Meu primeiro tweet!")
         self.assertEqual(perfil_teste.get_usuario(), 'user125')
-
 class TestPerfil(unittest.TestCase):
 
     def setUp(self):
@@ -34,32 +33,38 @@ class TestPerfil(unittest.TestCase):
         self.pj1 = PessoaJuridica('PessoaJurica1', '12.345.678/0001-99')
         self.pj2 = PessoaJuridica('PessoaJuridica2', '98.765.432/0001-00')
 
+        #Tweets
+        self.tweet3 = Tweet("usuario1", "GHI")
+        self.tweet1 = Tweet("usuario1", "ABC")
+        self.tweet2 = Tweet("usuario1", "DEF")
+
+
     def test_add_seguidor(self):
         self.perfil1.add_seguidor(self.perfil2)
-        self.assertIn(self.perfil2, self.perfil1._Perfil__seguidores)
+        self.assertIn(self.perfil2, self.perfil1.get_seguidores())
 
     def test_add_seguidos(self):
         self.perfil1.add_seguidos(self.perfil2)
-        self.assertIn(self.perfil2, self.perfil1._Perfil__seguidos)
+        self.assertIn(self.perfil2, self.perfil1.get_seguidos())
 
     def test_add_tweet(self):
         tweet = Tweet('usuario1', 'Mensagem de teste')
         self.perfil1.add_tweet(tweet)
-        self.assertIn(tweet, self.perfil1._Perfil__tweets)
+        self.assertIn(tweet, self.perfil1.get_tweets())
 
     def test_get_tweets(self):
         # Adicionando tweets ao perfil1
+        self.perfil1.add_tweet(self.tweet3)
         self.perfil1.add_tweet(self.tweet1)
         self.perfil1.add_tweet(self.tweet2)
-        self.perfil1.add_tweet(self.tweet3)
 
         # Obtendo os tweets ordenados de perfil1
         tweets_ordenados = self.perfil1.get_tweets()
 
         # Comparando os atributos diretamente em vez de comparar os objetos
-        self.assertEqual(tweets_ordenados[0].get_postagem(), self.tweet3.get_postagem())
-        self.assertEqual(tweets_ordenados[1].get_postagem(), self.tweet1.get_postagem())
-        self.assertEqual(tweets_ordenados[2].get_postagem(), self.tweet2.get_postagem())
+        self.assertEqual(tweets_ordenados[0].get_data_postagem(), self.tweet3.get_data_postagem())
+        self.assertEqual(tweets_ordenados[1].get_data_postagem(), self.tweet1.get_data_postagem())
+        self.assertEqual(tweets_ordenados[2].get_data_postagem(), self.tweet2.get_data_postagem())
 
     def test_get_tweets_com_vazio(self):
         # Teste para perfil vazio (sem tweets)
@@ -131,16 +136,21 @@ class TestMyTwitter(unittest.TestCase):
         self.usuario2 = "@Catarina"
         self.usuario3 = "@Lucas"
 
+        self.perfil1 = Perfil("@Zacarias")
+        self.my_twitter.criar_perfil(self.perfil1)
+        self.perfil2 = Perfil("@Catarina")
+        self.my_twitter.criar_perfil(self.perfil2)
+        self.perfil3 = Perfil('@Lucas')
+        self.my_twitter.criar_perfil(self.perfil3)
+
     def test_criar_perfil(self):
-        self.my_twitter.criar_perfil(self.usuario1)
-        perfil = self.my_twitter._MyTwitter__repositorio.buscar(self.usuario1)
-        self.assertEqual(perfil.usuario, self.usuario1)
+        with self.assertRaises(UJCException):
+            self.my_twitter.criar_perfil(self.perfil1)
+
 
     def test_cancelar_perfil(self):
-        self.my_twitter.criar_perfil(self.usuario1)
         self.my_twitter.cancelar_perfil(self.usuario1)
-        perfil = self.my_twitter._MyTwitter__repositorio.buscar(self.usuario1)
-        self.assertEqual(perfil.is_ativo(), False)
+        self.assertEqual(self.perfil1.is_ativo(), False)
 
     def test_tweetar(self):
         self.my_twitter.criar_perfil(self.usuario1)
